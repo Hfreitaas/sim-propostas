@@ -1,0 +1,1684 @@
+<!DOCTYPE html>
+
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>SIM PRO FINAL V8</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+<style>
+
+.btn-clientes{
+  background:#22c55e;
+}
+
+.btn-clientes:hover{
+  background:#16a34a;
+}
+
+.btn-propostas{
+  background: linear-gradient(135deg, #facc15, #f59e0b); /* dourado */
+  color:#1e293b;
+  font-weight:bold;
+  padding:6px 14px;
+  width:auto;
+  border:none;
+  box-shadow: 0 0 8px rgba(250,204,21,0.5);
+  transition: all 0.3s ease;
+}
+
+.btn-propostas:hover{
+  background: linear-gradient(135deg, #fde047, #f97316);
+  box-shadow: 
+    0 0 10px rgba(250,204,21,0.9),
+    0 0 20px rgba(249,115,22,0.7);
+  transform: translateY(-2px) scale(1.03);
+}
+
+
+.btn-mini{
+  position:relative;
+}
+
+.btn-mini:hover::after{
+  content: attr(title);
+  position:absolute;
+  bottom:-28px;
+  left:50%;
+  transform:translateX(-50%);
+  background:#0f172a;
+  color:#fff;
+  padding:4px 8px;
+  border-radius:6px;
+  font-size:12px;
+  white-space:nowrap;
+}
+
+.btn-exportar{
+  background:#22c55e; /* verde */
+}
+
+.btn-exportar:hover{
+  background:#16a34a;
+}
+
+.btn-importar{
+  background:#3b82f6; /* azul */
+}
+
+.btn-importar:hover{
+  background:#2563eb;
+}
+
+.btn-mini{
+  width:auto;
+  padding:6px 10px;
+  font-size:14px;
+  border-radius:8px;
+}
+
+.btn-excluir{
+  background:#ef4444;
+  color:#fff;
+}
+
+.btn-excluir:hover{
+  background:#dc2626;
+}
+
+.btn-editar{
+  background:#22c55e;
+  color:#fff;
+}
+
+.btn-editar:hover{
+  background:#16a34a;
+}
+
+body{
+  margin:0;
+  font-family:Segoe UI, Arial;
+  background:#0f172a;
+  color:#fff;
+  transition:0.3s;
+}
+
+.container{
+  display:flex;
+  height:100vh;
+}
+
+/* PAINEL ESQUERDO */
+.left{
+  width:35%;
+  background:#1e293b;
+  padding:20px;
+  overflow:auto;
+  box-shadow:4px 0 10px rgba(0,0,0,0.3);
+}
+
+/* PAINEL DIREITO */
+.right{
+  width:65%;
+  background:#f8fafc;
+  color:#111;
+  padding:20px;
+  border-radius:20px 0 0 20px;
+  animation:fadeIn 0.5s ease;
+}
+
+/* ANIMAÇÃO */
+@keyframes fadeIn{
+  from{opacity:0; transform:translateY(10px);}
+  to{opacity:1; transform:translateY(0);}
+}
+
+/* INPUTS */
+input{
+  width:100%;
+  padding:10px;
+  margin:6px 0;
+  border-radius:10px;
+  border:1px solid #ccc;
+  outline:none;
+  transition:0.2s;
+}
+
+input:focus{
+  border-color:#f97316;
+  box-shadow:0 0 5px rgba(249,115,22,0.5);
+}
+
+/* BOTÕES */
+button{
+  width:100%;
+  padding:10px;
+  margin:6px 0;
+  border:none;
+  border-radius:10px;
+  background:#f97316;
+  color:white;
+  font-weight:bold;
+  cursor:pointer;
+  transition:0.2s;
+}
+
+button:hover{
+  background:#ea580c;
+  transform:translateY(-2px);
+  box-shadow:0 4px 10px rgba(0,0,0,0.2);
+}
+
+/* CARDS */
+.material{
+  border-bottom:1px solid #334155;
+  padding:10px 0;
+  transition:0.2s;
+}
+
+.material:hover{
+  background:#334155;
+  border-radius:6px;
+  padding-left:5px;
+}
+
+.actions button{
+  width:auto;
+  margin-right:5px;
+  padding:5px 8px;
+  font-size:12px;
+}
+
+/* HEADER */
+.header{
+  text-align:center;
+  border-bottom:2px solid #e2e8f0;
+  margin-bottom:15px;
+  padding-bottom:10px;
+  position:relative; /* 🔥 IMPORTANTE */
+}
+
+.logo{
+  max-height:60px;
+}
+
+/* TABELA */
+table{
+  width:100%;
+  border-collapse:collapse;
+  background:white;
+  border-radius:12px;
+  overflow:hidden;
+  animation:fadeIn 0.5s ease;
+}
+
+td,th{
+  border:1px solid #e2e8f0;
+  padding:8px;
+  text-align:center;
+}
+
+th{
+  background:#0f172a;
+  color:white;
+}
+
+/* LINHA HOVER */
+tr:hover{
+  background:#f1f5f9;
+}
+
+/* TOTAL */
+.total{
+  font-size:22px;
+  text-align:right;
+  margin-top:10px;
+  font-weight:bold;
+  color:#0f172a;
+}
+
+/* CLIENTES */
+.resultado{
+  background:#334155;
+  border-radius:10px;
+  max-height:200px;
+  overflow:auto;
+  animation:fadeIn 0.3s ease;
+}
+
+.resultado div{
+  padding:10px;
+  border-bottom:1px solid #475569;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  transition:0.2s;
+}
+
+.resultado div:hover{
+  background:#475569;
+  transform:scale(1.01);
+}
+
+.resultado span{
+  cursor:pointer;
+}
+
+/* TITULOS */
+h3{
+  margin-top:15px;
+
+  /* GRADIENTE */
+  background: linear-gradient(90deg, #facc15, #f97316);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+
+  /* NEON / GLOW */
+  text-shadow:
+    0 0 5px rgba(250,204,21,0.6),
+    0 0 10px rgba(249,115,22,0.5),
+    0 0 15px rgba(249,115,22,0.4);
+
+  transition: all 0.3s ease;
+  position: relative;
+  cursor: default;
+}
+
+h3:hover{
+  transform: translateX(6px) scale(1.02);
+
+  text-shadow:
+    0 0 8px rgba(250,204,21,1),
+    0 0 16px rgba(249,115,22,0.9),
+    0 0 25px rgba(249,115,22,0.8);
+}
+
+/* LINHA ANIMADA */
+h3::after{
+  content:"";
+  position:absolute;
+  left:0;
+  bottom:-4px;
+  width:0%;
+  height:2px;
+
+  background: linear-gradient(90deg, #facc15, #f97316);
+  transition:0.4s ease;
+}
+
+h3:hover::after{
+  width:100%;
+}
+
+/* SCROLL CUSTOM */
+::-webkit-scrollbar{
+  width:8px;
+}
+::-webkit-scrollbar-thumb{
+  background:#f97316;
+  border-radius:10px;
+}
+
+</style>
+
+
+</head>
+<body>
+
+<div class="container">
+
+<div class="left">
+
+<h3>Empresa</h3>
+<input id="empresa" placeholder="Nome da empresa">
+<input type="file" id="logoInput">
+
+<img id="logoPreview" style="max-width:150px; margin-top:10px;">
+
+<button onclick="limparEmpresa()">🧹 Limpar Empresa</button>
+
+
+<h3>Cadastrar Cliente</h3>
+<input id="cli_nome" placeholder="Razão Social">
+<input id="cli_cnpj" placeholder="CNPJ">
+<input id="cli_fone" placeholder="Telefone">
+<input id="cli_endereco" placeholder="Endereço">
+<button onclick="salvarCliente()">Salvar Cliente</button>
+
+<h3>Selecionar Cliente</h3>
+<input id="buscaCliente" placeholder="Buscar cliente..." onkeyup="buscarCliente()">
+
+<button onclick="toggleClientes()">📋 Ver Clientes</button>
+
+<div id="resultadoClientes" class="resultado" style="display:none;"></div>
+
+<h3>Documento</h3>
+
+<div style="display:flex; gap:10px;">
+  <button id="btnProposta" onclick="setTipo('proposta')">INFRAESTRUTURA</button>
+  <button id="btnOS" onclick="setTipo('os')">O.S.</button>
+</div>
+
+<div style="display:flex; gap:10px;">
+  <input id="numeroManual" placeholder="Número da Proposta">
+  <input id="numeroOS" placeholder="Número da O.S.">
+</div>
+
+  <input id="dataManual" type="date">
+  <textarea id="obs" placeholder="Observações..." style="width:100%;height:80px;border-radius:8px;padding:8px;"></textarea>
+
+<div id="camposOS" style="display:none; margin-top:10px;">
+
+  <input id="solicitante" placeholder="Solicitante">
+  <input id="contato" placeholder="Contato">
+  <input id="email" placeholder="E-mail">
+  <input id="obra" placeholder="Obra / Local">
+
+  <textarea id="escopo" placeholder="Escopo do serviço" style="width:100%;height:80px;"></textarea>
+
+  <input id="responsavel" placeholder="Responsável">
+
+  <select id="deslocamento">
+    <option value="">Deslocamento</option>
+    <option>SIM</option>
+    <option>NÃO</option>
+  </select>
+
+  <select id="equip">
+    <option value="">Equipamentos disponíveis?</option>
+    <option>SIM</option>
+    <option>NÃO</option>
+  </select>
+
+  <select id="notaFiscal">
+    <option value="">Nota Fiscal?</option>
+    <option>SIM</option>
+    <option>NÃO</option>
+  </select>
+
+  <select id="infra">
+    <option value="">Infra disponível?</option>
+    <option>SIM</option>
+    <option>NÃO</option>
+  </select>
+
+</div>
+
+<hr>
+
+<h3>Cadastro Material</h3>
+<input id="desc" placeholder="Descrição">
+<input id="un" placeholder="Unidade">
+<input id="custo" placeholder="Custo">
+<input id="mult" placeholder="Multiplicador">
+<button onclick="salvarMaterial()">Salvar / Atualizar</button>
+
+<h3>Importar Excel</h3>
+<input type="file" id="file">
+
+<hr>
+
+<input id="busca" placeholder="Buscar material..." onkeyup="renderMateriais()">
+
+<div id="listaMateriais"></div>
+
+</div>
+
+<div class="right">
+
+<div class="header">
+  <img id="logo" class="logo">
+  <h2 id="nomeEmpresa"></h2>
+  <div id="infoCliente"></div>
+  <div id="infoProposta"></div>
+
+  <div style="position:absolute; top:20px; right:20px; display:flex; gap:8px;">
+  <button class="btn-mini btn-clientes" title="Exportar Clientes Excel" onclick="exportarClientes()">📊</button>
+  <button class="btn-mini btn-exportar" title="Exportar Backup" onclick="exportarBackup()">💾</button>
+  <input type="file" id="importBackup" style="display:none" onchange="importarBackup(event)">
+  <button class="btn-mini btn-importar" title="Importar Backup" onclick="document.getElementById('importBackup').click()">📂</button>
+  <button class="btn-mini btn-propostas" onclick="togglePropostas()">📄 Propostas</button>
+
+  </div> <!-- fecha botões -->
+</div> <!-- fecha header -->
+
+<!-- 🔥 PREVIEW OS -->
+<div id="previewOS" style="
+  display:none;
+  background:white;
+  padding:15px;
+  border-radius:12px;
+  margin-bottom:15px;
+  box-shadow:0 0 10px rgba(0,0,0,0.1);
+">
+  <h3 style="color:#0f172a;">📄 Prévia da O.S.</h3>
+
+  <div id="osConteudo"></div>
+</div>
+
+<h2>Orçamento</h2>
+
+<table>
+<thead>
+<tr>
+<th>Material</th>
+<th>Qtd</th>
+<th>Valor</th>
+<th>Total</th>
+<th></th>
+</tr>
+</thead>
+<tbody id="orcamento"></tbody>
+</table>
+
+<div class="total" id="total"></div>
+
+<button onclick="novaProposta()">➕ Nova</button>
+<button onclick="salvarProposta()">💾 Salvar Proposta</button>
+<button onclick="gerarPDF()">Gerar PDF</button>
+
+</div>
+
+</div>
+
+<script>
+
+const KEY = "sim_pro_final";
+const KEY_CLIENTES = "sim_clientes";
+const KEY_EMPRESA = "sim_empresa_dados";
+const KEY_PROPOSTAS = "sim_propostas";
+
+const SUPABASE_URL = "https://hqbevvchdayeghhkaikx.supabase.co";
+const SUPABASE_KEY = "sb_publishable_uD-IxQbspM96F3KcEjmcGw_I0lGw3o2";
+
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let propostas = JSON.parse(localStorage.getItem(KEY_PROPOSTAS)) || [];
+let materiais = JSON.parse(localStorage.getItem(KEY)) || [];
+let clientes = JSON.parse(localStorage.getItem(KEY_CLIENTES)) || [];
+
+let clienteSelecionado = null;
+let orc = [];
+let editId = null;
+let editClienteId = null;
+let logoBase64 = "";
+
+let propostaAtualId = null;
+
+let tipoDocumento = "proposta";
+
+// ================= UTIL =================
+
+function parseValor(v){
+  if(!v) return 0;
+  return parseFloat(String(v).replace("R$","").replace(",",".").trim()) || 0;
+}
+
+// ================= SALVAR =================
+
+function salvar(){
+  localStorage.setItem(KEY, JSON.stringify(materiais));
+}
+
+function salvarClientes(){
+  localStorage.setItem(KEY_CLIENTES, JSON.stringify(clientes));
+}
+
+function salvarEmpresa(){
+
+  const dados = {
+    nome: empresa.value,
+    logo: logoBase64
+  };
+
+  localStorage.setItem(KEY_EMPRESA, JSON.stringify(dados));
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("empresa").addEventListener("input", salvarEmpresa);
+});
+
+// ================= CLIENTES =================
+
+function salvarCliente(){
+
+  let cnpjLimpo = cli_cnpj.value.replace(/\D/g,"");
+
+  // 🔥 MODO EDIÇÃO
+  if(editClienteId){
+
+    let index = clientes.findIndex(c=>c.id==editClienteId);
+
+    if(index !== -1){
+      clientes[index] = {
+        id: editClienteId,
+        nome: cli_nome.value,
+        cnpj: cli_cnpj.value,
+        fone: cli_fone.value,
+        endereco: cli_endereco.value
+      };
+    }
+
+    editClienteId = null;
+
+  } else {
+
+    let existente = clientes.find(c => 
+      c.cnpj && c.cnpj.replace(/\D/g,"") === cnpjLimpo
+    );
+
+    if(existente){
+      existente.nome = cli_nome.value;
+      existente.fone = cli_fone.value;
+      existente.endereco = cli_endereco.value; // 🔥 IMPORTANTE
+    } else {
+      clientes.push({
+        id: Date.now(),
+        nome: cli_nome.value,
+        cnpj: cli_cnpj.value,
+        fone: cli_fone.value,
+        endereco: cli_endereco.value
+      });
+    }
+  }
+
+  salvarClientes();
+
+  // limpa campos
+  cli_nome.value="";
+  cli_cnpj.value="";
+  cli_fone.value="";
+  cli_endereco.value="";
+
+  buscarCliente();
+}
+
+
+function exportarClientes(){
+
+  if(!clientes || clientes.length === 0){
+    alert("Nenhum cliente para exportar!");
+    return;
+  }
+
+  // 🔥 FORMATAR DADOS
+  let dados = clientes.map(c => ({
+    Nome: c.nome || "",
+    CNPJ: c.cnpj || "",
+    Telefone: c.fone || "",
+    Email: c.email || "",
+    Endereco: c.endereco || ""
+  }));
+
+  // 🔥 CRIAR PLANILHA
+  let ws = XLSX.utils.json_to_sheet(dados);
+
+  let wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Clientes");
+
+  // 🔥 EXPORTAR
+  XLSX.writeFile(wb, "clientes.xlsx");
+}
+
+
+function editarCliente(id){
+
+  let c = clientes.find(x=>x.id==id);
+
+  cli_nome.value = c.nome;
+  cli_cnpj.value = c.cnpj;
+  cli_fone.value = c.fone;
+  cli_endereco.value = c.endereco || "";
+
+  editClienteId = id;
+
+  cli_nome.focus();
+}
+
+// 🔥 ABRIR/FECHAR LISTA
+function toggleClientes(){
+  if(resultadoClientes.style.display === "none"){
+    resultadoClientes.style.display = "block";
+    buscarCliente();
+  }else{
+    resultadoClientes.style.display = "none";
+  }
+}
+
+// 🔎 BUSCA
+function buscarCliente(){
+
+  let termo = buscaCliente.value.toLowerCase();
+
+  let filtrados = termo
+    ? clientes.filter(c =>
+        c.nome.toLowerCase().includes(termo) ||
+        (c.cnpj && c.cnpj.includes(termo))
+      )
+    : clientes;
+
+  resultadoClientes.innerHTML = "";
+
+  if(filtrados.length === 0){
+    resultadoClientes.innerHTML = "<div>Nenhum cliente encontrado</div>";
+    return;
+  }
+
+  filtrados.forEach(c=>{
+    resultadoClientes.innerHTML += `
+      <div>
+        <span onclick="selecionarCliente(${c.id})">
+          ${c.nome}
+        </span>
+
+        <div style="display:flex;gap:5px;">
+          <button class="btn-editar" onclick="editarCliente(${c.id})">✏️</button>
+          <button class="btn-excluir" onclick="deletarCliente(${c.id})">🗑️</button>
+        </div>
+      </div>
+    `;
+  });
+}
+
+function selecionarCliente(id){
+  let c = clientes.find(x=>x.id==id);
+  clienteSelecionado = c;
+  buscaCliente.value = c.nome;
+  resultadoClientes.style.display = "none";
+}
+
+function deletarCliente(id){
+  if(confirm("Excluir cliente?")){
+    clientes = clientes.filter(c=>c.id!=id);
+    salvarClientes();
+    buscarCliente();
+  }
+}
+
+function setTipo(tipo){
+
+  tipoDocumento = tipo;
+
+  if(tipo === "proposta"){
+
+    btnProposta.style.background = "#16a34a";
+    btnOS.style.background = "#f97316";
+
+    camposOS.style.display = "none";
+
+  } else {
+
+    btnProposta.style.background = "#f97316";
+    btnOS.style.background = "#16a34a";
+
+    camposOS.style.display = "block";
+  }
+  renderPreviewOS();
+}
+
+
+// ================= MATERIAIS =================
+
+function salvarMaterial(){
+  let m = {
+    id: editId || Date.now(),
+    desc: desc.value,
+    un: un.value,
+    custo: parseValor(custo.value),
+    mult: parseValor(mult.value)
+  };
+
+  if(editId){
+    let index = materiais.findIndex(x=>x.id==editId);
+    if(index !== -1) materiais[index]=m;
+    editId=null;
+  }else{
+    materiais.push(m);
+  }
+
+  salvar();
+  desc.value="";un.value="";custo.value="";mult.value="";
+  renderMateriais();
+}
+
+function editarMaterial(id){
+  let m = materiais.find(x=>x.id==id);
+  desc.value=m.desc;
+  un.value=m.un;
+  custo.value=m.custo;
+  mult.value=m.mult;
+  editId=id;
+}
+
+function deletarMaterial(id){
+  if(confirm("Excluir material?")){
+    materiais = materiais.filter(x=>x.id!=id);
+    salvar();
+    renderMateriais();
+  }
+}
+
+function renderMateriais(){
+  let f = busca.value.toLowerCase();
+  listaMateriais.innerHTML="";
+
+  materiais.filter(m=>m.desc.toLowerCase().includes(f))
+  .forEach(m=>{
+    let venda=m.custo*m.mult;
+
+    listaMateriais.innerHTML+=`
+    <div class="material">
+      ${m.desc} - R$ ${venda.toFixed(2)}
+      <div class="actions">
+        <button onclick='add(${JSON.stringify(m)})'>+</button>
+        <button style="background:#22c55e" onclick="editarMaterial(${m.id})">✏️</button>
+        <button class="btn-excluir" onclick="deletarMaterial(${m.id})">🗑️</button>
+      </div>
+    </div>`;
+  });
+}
+
+// ================= ORÇAMENTO =================
+
+function add(m){
+  orc.push({...m,qtd:1,valorManual:m.custo*m.mult});
+  renderOrc();
+}
+
+function renderOrc(){
+  orcamento.innerHTML="";
+  let tot=0;
+
+  orc.forEach((i,idx)=>{
+    let venda=i.valorManual || (i.custo*i.mult);
+    let t=venda*i.qtd;
+    tot+=t;
+
+    orcamento.innerHTML+=`
+    <tr>
+      <td>${i.desc}</td>
+      <td>
+        <input type="number" min="0" step="1"
+               value="${i.qtd}"
+               oninput="qtd(${idx},this.value)"
+               onblur="renderOrc()">
+      </td>
+      <td contenteditable onblur="editarValor(${idx},this.innerText)">
+        ${venda.toFixed(2)}
+      </td>
+      <td>${t.toFixed(2)}</td>
+      <td><button class="btn-excluir" onclick="rem(${idx})">X</button></td>
+    </tr>`;
+  });
+
+  total.innerText="TOTAL: R$ "+tot.toFixed(2);
+
+  nomeEmpresa.innerText=empresa.value;
+
+  infoCliente.innerText=
+    "Cliente: "+(clienteSelecionado?.nome || "")+
+    (clienteSelecionado?.cnpj ? " | CNPJ: "+clienteSelecionado.cnpj : "");
+
+  let dataFinal = dataManual.value
+    ? dataManual.value.split("-").reverse().join("/")
+    : new Date().toLocaleDateString("pt-BR");
+
+infoProposta.innerText=
+  (tipoDocumento === "proposta"
+    ? "Proposta: "+(numeroManual.value||"-")
+    : "O.S.: "+(numeroOS.value||"-"))
+  + " | Data: "+dataFinal;
+
+// 🔥 AQUI
+renderPreviewOS();
+}
+
+function qtd(i,v){
+  let valor = parseInt(v);
+
+  if(isNaN(valor) || valor < 0){
+    valor = 0;
+  }
+
+  orc[i].qtd = valor;
+}
+function rem(i){orc.splice(i,1);renderOrc();}
+function editarValor(i,v){orc[i].valorManual=parseValor(v);renderOrc();}
+
+
+// ================= IMPORTAÇÃO =================
+
+file.addEventListener("change",e=>{
+  let r=new FileReader();
+  r.onload=e=>{
+    let data=new Uint8Array(e.target.result);
+    let wb=XLSX.read(data,{type:"array"});
+    let json=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+
+    json.forEach(row=>{
+      materiais.push({
+        id: Date.now()+Math.random(),
+        desc: row.DESCRICAO || row["DESCRIÇÃO"] || "",
+        un: row.UNIDADE || "",
+        custo: parseValor(row.CUSTO),
+        mult: parseValor(row.MULTIPLICADOR)
+      });
+    });
+
+    salvar();
+    renderMateriais();
+  };
+  r.readAsArrayBuffer(e.target.files[0]);
+});
+
+// ================= LOGO =================
+
+logoInput.addEventListener("change",e=>{
+  let r=new FileReader();
+  r.onload=ev=>{
+    logoBase64 = ev.target.result;
+    document.getElementById("logoPreview").src = logoBase64;
+document.getElementById("logo").src = logoBase64;
+
+    salvarEmpresa(); // 🔥 salva automático
+  };
+  r.readAsDataURL(e.target.files[0]);
+});
+
+
+function exportarBackup(){
+
+  const dados = {
+    materiais: materiais,
+    clientes: clientes,
+    empresa: JSON.parse(localStorage.getItem(KEY_EMPRESA))
+  };
+
+  const blob = new Blob([JSON.stringify(dados,null,2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "backup_SIM.json";
+  a.click();
+
+  URL.revokeObjectURL(url);
+}
+
+
+function importarBackup(e){
+
+  const file = e.target.files[0];
+  if(!file) return;
+
+  const reader = new FileReader();
+
+  reader.onload = function(event){
+    try{
+
+      const dados = JSON.parse(event.target.result);
+
+      if(dados.materiais){
+        materiais = dados.materiais;
+        localStorage.setItem(KEY, JSON.stringify(materiais));
+      }
+
+      if(dados.clientes){
+        clientes = dados.clientes;
+        localStorage.setItem(KEY_CLIENTES, JSON.stringify(clientes));
+      }
+
+      if(dados.empresa){
+        localStorage.setItem(KEY_EMPRESA, JSON.stringify(dados.empresa));
+      }
+
+      alert("Backup restaurado com sucesso!");
+      location.reload();
+
+    }catch(err){
+      alert("Erro ao importar backup!");
+    }
+  };
+
+  reader.readAsText(file);
+}
+
+
+function novaProposta(){
+  console.log("clicou nova proposta");
+
+  propostaAtualId = null; // 🔥 ESSENCIAL
+
+  numeroManual.value = "";
+  numeroOS.value = "";
+  clienteSelecionado = null;
+  orc = [];
+
+  renderOrc();
+}
+
+function salvarProposta(){
+
+  const dados = {
+  id: propostaAtualId || Date.now(),
+  tipo: tipoDocumento,
+
+  numero: numeroManual.value,
+  os: numeroOS.value,
+  cliente: clienteSelecionado,
+  itens: orc,
+  data: dataManual.value,
+
+  solicitante: solicitante.value,
+  contato: contato.value,
+  email: email.value,
+  obra: obra.value,
+
+  escopo: escopo.value,
+  responsavel: responsavel.value,
+  deslocamento: deslocamento.value,
+  equip: equip.value,
+  notaFiscal: notaFiscal.value,
+  infra: infra.value,
+};
+
+  if(propostaAtualId){
+    // 🔥 ATUALIZA
+    let index = propostas.findIndex(p => p.id == propostaAtualId);
+
+    if(index !== -1){
+      propostas[index] = dados;
+    }
+
+    alert("Proposta atualizada!");
+  } else {
+    // 🔥 NOVA
+    propostas.push(dados);
+    propostaAtualId = dados.id;
+
+    alert("Proposta salva!");
+  }
+
+  localStorage.setItem(KEY_PROPOSTAS, JSON.stringify(propostas));
+  salvarNaNuvem(dados);
+}
+
+async function salvarNaNuvem(dados){
+
+const { error } = await db
+  .from('propostas')
+  .insert([{ dados }]);
+
+  if(error){
+    console.log("Erro ao salvar:", error);
+  } else {
+    console.log("Salvo na nuvem!");
+  }
+}
+
+
+async function carregarNuvem(){
+
+const { data, error } = await db
+  .from('propostas')
+  .select('*');
+
+  if(error){
+    console.log("Erro ao carregar:", error);
+    return;
+  }
+
+  if(data){
+    propostas = data.map(p => p.dados);
+    renderPropostas();
+  }
+}
+
+function togglePropostas(){
+
+  if(listaPropostas.style.display === "none"){
+    listaPropostas.style.display = "block";
+    renderPropostas();
+  } else {
+    listaPropostas.style.display = "none";
+  }
+}
+
+function renderPropostas(){
+
+  let termo = (buscaProposta?.value || "").toLowerCase();
+
+  let container = document.getElementById("listaPropostasConteudo");
+
+  container.innerHTML = "";
+
+  if(propostas.length === 0){
+    container.innerHTML = "<div>Sem propostas</div>";
+    return;
+  }
+
+  let filtradas = propostas.filter(p => {
+
+    let numero = (p.numero || "").toLowerCase();
+    let os = (p.os || "").toLowerCase();
+    let cliente = (p.cliente?.nome || "").toLowerCase();
+
+    return (
+      numero.includes(termo) ||
+      os.includes(termo) ||
+      cliente.includes(termo)
+    );
+  });
+
+  if(filtradas.length === 0){
+    container.innerHTML = "<div>Nenhuma encontrada</div>";
+    return;
+  }
+
+  filtradas.forEach(p=>{
+    container.innerHTML += `
+      <div style="border-bottom:1px solid #334155; padding:8px; display:flex; justify-content:space-between; align-items:center;">
+
+        <div>
+          <div><b>${p.numero || "Sem número"}</b></div>
+          <div>O.S.: ${p.os || "-"}</div>
+          <div>${p.cliente?.nome || ""}</div>
+        </div>
+
+        <div style="display:flex; gap:5px;">
+          <button onclick="abrirProposta(${p.id})">📂</button>
+          <button class="btn-excluir" onclick="excluirProposta(${p.id})">🗑️</button>
+        </div>
+
+      </div>
+    `;
+  });
+}
+
+function abrirProposta(id){
+
+  propostaAtualId = id;
+
+  let p = propostas.find(x=>x.id==id);
+  if(!p) return;
+
+  tipoDocumento = p.tipo || "proposta";
+  setTipo(tipoDocumento);
+
+  numeroManual.value = p.numero || "";
+  numeroOS.value = p.os || "";
+  clienteSelecionado = p.cliente;
+  orc = p.itens || [];
+  dataManual.value = p.data || "";
+
+  solicitante.value = p.solicitante || "";
+  contato.value = p.contato || "";
+  email.value = p.email || "";
+  obra.value = p.obra || "";
+
+  escopo.value = p.escopo || "";
+  responsavel.value = p.responsavel || "";
+  deslocamento.value = p.deslocamento || "";
+  equip.value = p.equip || "";
+  notaFiscal.value = p.notaFiscal || "";
+  infra.value = p.infra || "";
+
+  renderOrc();
+
+  listaPropostas.style.display = "none";
+}
+
+function excluirProposta(id){
+
+  if(!confirm("Deseja excluir esta proposta?")) return;
+
+  // 🔥 se for a atual, limpa
+  if(propostaAtualId == id){
+    propostaAtualId = null;
+  }
+
+  propostas = propostas.filter(p => p.id != id);
+
+  localStorage.setItem(KEY_PROPOSTAS, JSON.stringify(propostas));
+
+  renderPropostas();
+}
+
+
+function renderPreviewOS(){
+
+  if(tipoDocumento !== "os"){
+    previewOS.style.display = "none";
+    return;
+  }
+
+  previewOS.style.display = "block";
+
+  let dataFinal = dataManual.value
+    ? dataManual.value.split("-").reverse().join("/")
+    : new Date().toLocaleDateString("pt-BR");
+
+  osConteudo.innerHTML = `
+    <div style="font-size:14px; color:#111;">
+
+      <b>Cliente:</b> ${clienteSelecionado?.nome || "-"} <br>
+      <b>CNPJ:</b> ${clienteSelecionado?.cnpj || "-"} <br>
+      <b>Telefone:</b> ${clienteSelecionado?.fone || "-"} <br>
+      <b>Endereço:</b> ${clienteSelecionado?.endereco || "-"} <br><br>
+
+      <b>Proposta:</b> ${numeroManual.value || "-"} |
+      <b>O.S.:</b> ${numeroOS.value || "-"} |
+      <b>Data:</b> ${dataFinal}
+
+      <hr>
+
+      <b>Solicitante:</b> ${solicitante.value || "-"} <br>
+      <b>E-mail:</b> ${email.value || "-"} <br>
+      <b>Contato:</b> ${contato.value || "-"} <br>
+      <b>Obra:</b> ${obra.value || "-"} <br><br>
+
+      <b>Escopo:</b><br>
+      <div style="background:#f1f5f9; padding:10px; border-radius:8px;">
+        ${escopo.value || "-"}
+      </div>
+
+      <br>
+
+      <b>Responsável:</b> ${responsavel.value || "-"} <br>
+      <b>Deslocamento:</b> ${deslocamento.value || "-"} <br>
+      <b>Equipamentos:</b> ${equip.value || "-"} <br>
+      <b>Nota Fiscal:</b> ${notaFiscal.value || "-"} <br>
+      <b>Infra:</b> ${infra.value || "-"} <br>
+
+    </div>
+  `;
+}
+
+
+// ================= PDF =================
+
+function gerarPDF_OS(){
+
+  const doc = new window.jspdf.jsPDF();
+
+  const azul = [15,23,42];
+  const laranja = [249,115,22];
+
+  let y = 20;
+
+function novaPagina(sePrecisa = 20){
+
+  if(y + sePrecisa > 280){ // limite da página A4
+    doc.addPage();
+    y = 20; // margem superior
+  }
+
+}
+
+  // ================= HEADER =================
+  doc.setFillColor(...azul);
+  doc.rect(0,0,210,30,"F");
+
+  if(logoBase64){
+    doc.addImage(logoBase64,"PNG",10,8,30,15);
+  }
+
+  doc.setTextColor(255,255,255);
+  doc.setFont("helvetica","bold");
+  doc.setFontSize(13);
+
+  doc.text(empresa.value || "SUA EMPRESA",45,15);
+
+  doc.setTextColor(...laranja);
+  doc.setFontSize(12);
+
+  doc.text(
+    "ORDEM DE SERVIÇO",
+    105,
+    22,
+    { align: "center" }
+  );
+
+  // ================= CLIENTE =================
+  y = 40;
+
+  doc.setFillColor(240,240,240);
+  doc.roundedRect(10,y,190,38,3,3,"F");
+
+  doc.setTextColor(0,0,0);
+  doc.setFont("helvetica","bold");
+
+  doc.text("CLIENTE",12,y+7);
+
+  doc.setFont("helvetica","normal");
+
+  doc.text("Nome: " + (clienteSelecionado?.nome || "-"),12,y+14);
+  doc.text("CNPJ: " + (clienteSelecionado?.cnpj || "-"),12,y+20);
+  doc.text("Telefone: " + (clienteSelecionado?.fone || "-"),12,y+26);
+  doc.text("Endereço: " + (clienteSelecionado?.endereco || "-"),12,y+32);
+
+
+  y += 45;
+
+  doc.setFontSize(9);
+  doc.setFont("helvetica","bold");
+
+// 🔥 TAMANHO MENOR
+doc.setFontSize(9);
+
+// SOLICITANTE
+doc.setFont("helvetica","bold");
+doc.text("Solicitante:",10,y);
+doc.setFont("helvetica","normal");
+doc.text(solicitante.value || "-",50,y);
+
+y += 6;
+
+// EMAIL
+doc.setFont("helvetica","bold");
+doc.text("E-mail:",10,y);
+doc.setFont("helvetica","normal");
+doc.text(email.value || "-",50,y);
+
+y += 6;
+
+// CONTATO
+doc.setFont("helvetica","bold");
+doc.text("Contato:",10,y);
+doc.setFont("helvetica","normal");
+doc.text(contato.value || "-",50,y);
+
+y += 6;
+
+// OBRA (🔥 CORRETO AGORA)
+doc.setFont("helvetica","bold");
+doc.text("Obra/Local:",10,y);
+doc.setFont("helvetica","normal");
+
+// 👉 limita largura pra não quebrar feio
+let textoObra = (obra.value || "-").substring(0, 70);
+
+doc.text(textoObra,50,y);
+
+y += 10;
+
+
+  // ================= DADOS =================
+  let dataFinal = dataManual.value
+    ? dataManual.value.split("-").reverse().join("/")
+    : new Date().toLocaleDateString("pt-BR");
+
+  doc.setFont("helvetica","bold");
+
+// 🔥 CAIXA LARANJA
+doc.setFillColor(249,115,22); // laranja
+let altura = 10; // menor altura
+doc.roundedRect(10, y-5, 190, altura, 3, 3, "F");
+
+// TEXTO BRANCO
+doc.setTextColor(255,255,255);
+doc.setFont("helvetica","bold");
+doc.setFontSize(10);
+
+// CONTEÚDO
+doc.text("Proposta: " + (numeroManual.value || "-"),15,y+2);
+doc.text("O.S.: " + (numeroOS.value || "-"),80,y+2);
+doc.text("Data: " + dataFinal,140,y+2);
+
+// VOLTAR COR PADRÃO
+doc.setTextColor(0,0,0);
+
+  y += 15;
+
+  // ================= ESCOPO =================
+  doc.setFont("helvetica","bold");
+  doc.text("Escopo do Serviço:",10,y);
+
+  y += 8;
+
+  doc.setFont("helvetica","normal");
+
+  let linhas = doc.splitTextToSize(escopo.value || "",180);
+
+  linhas.forEach(l => {
+    novaPagina(6);
+    doc.text(l,10,y);
+    y += 6;
+  });
+
+  y += 5;
+
+
+  // ================= INFO TECNICA =================
+  doc.setFillColor(245,245,245);
+  doc.roundedRect(10,y,190,30,3,3,"F");
+
+  doc.text("Responsável: " + (responsavel.value || "-"),12,y+8);
+  doc.text("Deslocamento: " + (deslocamento.value || "-"),12,y+16);
+  doc.text("Equipamentos: " + (equip.value || "-"),12,y+24);
+  doc.text("Nota Fiscal: " + (notaFiscal.value || "-"),110,y+16);
+  doc.text("Infra: " + (infra.value || "-"),110,y+24);
+
+  y += 40;
+
+  // ================= OBS =================
+  let observacao = obs.value.trim();
+
+  if(observacao){
+
+    doc.setFont("helvetica","bold");
+    doc.text("Observações:",10,y);
+
+    y += 6;
+
+    doc.setFont("helvetica","normal");
+
+    let obsLinhas = doc.splitTextToSize(observacao,180);
+    doc.text(obsLinhas,10,y);
+  }
+
+  doc.save("OS_"+(numeroOS.value||"")+".pdf");
+}
+
+function gerarPDF(){
+
+if(tipoDocumento === "os"){
+  gerarPDF_OS();
+  return;
+}
+
+if(!window.jspdf || !window.jspdf.jsPDF){
+alert("Erro ao carregar PDF");
+return;
+}
+
+const doc = new window.jspdf.jsPDF();
+
+let y = 20;
+
+const azul = [15,23,42];
+const laranja = [249,115,22];
+
+// ================= HEADER =================
+doc.setFillColor(...azul);
+doc.rect(0,0,210,30,"F");
+
+// LOGO
+if(logoBase64){
+doc.addImage(logoBase64,"PNG",10,8,30,15);
+}
+
+doc.setTextColor(255,255,255);
+doc.setFont("helvetica","bold");
+doc.setFontSize(13);
+
+doc.text(empresa.value || "SUA EMPRESA",45,15);
+
+doc.setFontSize(9);
+doc.setFontSize(12);
+doc.setFont("helvetica","bold");
+doc.setTextColor(249,115,22); // laranja
+doc.setFontSize(12);
+doc.setFont("helvetica","bold");
+
+doc.text(
+  "SIM - SISTEMA DE INFRAESTRUTURA E MATERIAIS",
+  105,
+  22,
+  { align: "center" }
+);
+
+// volta para preto
+doc.setTextColor(0,0,0);
+
+// ================= DADOS EMPRESA =================
+y = 40;
+
+doc.setTextColor(0,0,0);
+doc.setFontSize(9);
+doc.setFont("helvetica","normal");
+
+// ================= CLIENTE (CORRETO) =================
+
+doc.setFillColor(240,240,240);
+doc.roundedRect(10,y,190,35,3,3,"F");
+
+doc.setFont("helvetica","bold");
+doc.text("CLIENTE",12,y+7);
+
+doc.setFont("helvetica","normal");
+
+doc.text("Nome: " + (clienteSelecionado?.nome || "-"),12,y+14);
+
+if(clienteSelecionado?.cnpj){
+  doc.text("CNPJ: " + clienteSelecionado.cnpj,12,y+20);
+}
+
+if(clienteSelecionado?.fone){
+  doc.text("Telefone: " + clienteSelecionado.fone,12,y+26);
+}
+
+if(clienteSelecionado?.endereco){
+  doc.text("Endereço: " + clienteSelecionado.endereco,12,y+32);
+}
+
+y += 35;
+
+// ================= DADOS PROPOSTA =================
+y+=10;
+
+let dataFinal = dataManual.value
+  ? dataManual.value.split("-").reverse().join("/")
+  : new Date().toLocaleDateString("pt-BR");
+
+doc.setFont("helvetica","bold");
+
+doc.setFont("helvetica","bold");
+
+// PROPOSTA (lado esquerdo)
+doc.text("Proposta:",10,y);
+doc.text(numeroManual.value || "-",40,y);
+
+// O.S. (lado direito)
+doc.text("O.S.:",100,y);
+doc.text(numeroOS.value || "-",120,y);
+
+doc.text("Data:",150,y);
+doc.text(dataFinal,170,y);
+
+// ================= CLIENTE =================
+y+=10;
+
+
+// ================= TABELA HEADER =================
+doc.setFillColor(...laranja);
+doc.rect(10,y,190,10,"F");
+
+doc.setTextColor(255,255,255);
+doc.setFont("helvetica","bold");
+
+doc.text("DESCRIÇÃO",12,y+7);
+doc.text("QTD",120,y+7);
+doc.text("UNIT",145,y+7);
+doc.text("TOTAL",175,y+7);
+
+y+=12;
+
+doc.setTextColor(0,0,0);
+doc.setFont("helvetica","normal");
+
+let totalGeral = 0;
+let totalBase = 0;
+
+// ================= ITENS =================
+orc.forEach(i=>{
+
+  let venda = i.valorManual || (i.custo*i.mult);
+  let totalItem = venda * i.qtd;
+  totalGeral += totalItem;
+
+  let custoBase = i.custo * i.qtd;
+  totalBase += custoBase;
+
+  if(y > 270){
+    doc.addPage();
+    y = 20;
+  }
+
+  // LINHA FUNDO ALTERNADO
+  doc.setFillColor(245,245,245);
+  doc.rect(10,y-4,190,8,"F");
+
+  doc.text(i.desc.substring(0,65),12,y);
+
+  doc.text(String(i.qtd),125,y,{align:"right"});
+  doc.text("R$ "+venda.toFixed(2),155,y,{align:"right"});
+  doc.text("R$ "+totalItem.toFixed(2),195,y,{align:"right"});
+
+  y+=10;
+});
+
+
+// ================= TOTAL =================
+y += 5;
+
+// 🔥 FORÇA QUEBRA ANTES DO BLOCO COMPLETO
+if(y > 240){
+  doc.addPage();
+  y = 20;
+}
+
+doc.setDrawColor(...laranja);
+doc.line(120,y,200,y);
+
+y += 10;
+
+doc.setFont("helvetica","bold");
+doc.setFontSize(12);
+doc.setTextColor(...laranja);
+
+// TOTAL GERAL
+doc.text("TOTAL GERAL:",130,y);
+doc.text("R$ "+totalGeral.toFixed(2),195,y,{align:"right"});
+
+// 🔥 GARANTE ESPAÇO PRO BASE
+y += 10;
+
+if(y > 270){
+  doc.addPage();
+  y = 20;
+}
+
+// VALOR BASE
+doc.setFont("helvetica","bold");
+doc.setFontSize(11);
+doc.setTextColor(0,0,0);
+
+doc.text("VALOR BASE:",130,y);
+doc.text("R$ "+totalBase.toFixed(2),195,y,{align:"right"});
+
+
+// ================= RODAPÉ =================
+y+=20;
+
+doc.setFontSize(9);
+doc.setTextColor(0,0,0);
+
+// ================= OBSERVAÇÕES =================
+
+let observacao = document.getElementById("obs").value.trim();
+
+if(observacao){
+
+  y += 10;
+
+  doc.setFont("helvetica","bold");
+  doc.text("Observações:",10,y);
+
+  y += 6;
+
+  doc.setFont("helvetica","normal");
+
+  // quebra texto automático
+  let linhas = doc.splitTextToSize(observacao, 180);
+
+  doc.text(linhas,10,y);
+}
+
+doc.save("Proposta_"+(numeroManual.value||"")+".pdf");
+}
+
+function limparEmpresa(){
+  localStorage.removeItem(KEY_EMPRESA);
+  location.reload();
+}
+
+
+// ================= INIT =================
+
+window.onload=()=>{
+  let hoje=new Date().toISOString().split("T")[0];
+  dataManual.value=hoje;
+
+  buscarCliente();
+
+  let dadosEmpresa = JSON.parse(localStorage.getItem(KEY_EMPRESA));
+
+  if(dadosEmpresa){
+    empresa.value = dadosEmpresa.nome || "";
+    logoBase64 = dadosEmpresa.logo || "";
+
+    if(logoBase64){
+      document.getElementById("logoPreview").src = logoBase64;
+      document.getElementById("logo").src = logoBase64;
+    }
+  }
+
+  // 🔥 FORA DO IF
+  carregarNuvem();
+};
+
+renderMateriais();
+
+document.querySelectorAll("input, textarea, select").forEach(el=>{
+  el.addEventListener("input", ()=>{
+    renderPreviewOS();
+  });
+});
+
+
+</script>
+
+<div id="listaPropostas" style="
+  position:fixed;
+  top:80px;
+  right:20px;
+  width:300px;
+  max-height:400px;
+  background:#1e293b;
+  border-radius:10px;
+  padding:10px;
+  display:none;
+  z-index:999;
+">
+
+  <!-- 🔎 BUSCA FIXA -->
+  <input 
+    id="buscaProposta" 
+    placeholder="🔎 Buscar proposta..." 
+    onkeyup="renderPropostas()"
+    style="width:100%; padding:8px; border-radius:8px; margin-bottom:10px;"
+  >
+
+  <!-- 📄 LISTA -->
+  <div id="listaPropostasConteudo"></div>
+
+</div>
+
+</body>
+</html>
