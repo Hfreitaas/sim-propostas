@@ -342,6 +342,7 @@ h3:hover::after{
 
 <button onclick="limparEmpresa()">🧹 Limpar Empresa</button>
 
+<button onclick="migrarParaNuvem()">☁️ Migrar Dados para Nuvem</button>
 
 <h3>Cadastrar Cliente</h3>
 <input id="cli_nome" placeholder="Razão Social">
@@ -650,6 +651,24 @@ function toggleClientes(){
   }
 }
 
+async function carregarClientesNuvem(){
+
+  const { data, error } = await db
+    .from('clientes')
+    .select('*');
+
+  if(error){
+    console.log("Erro clientes:", error);
+    return;
+  }
+
+  if(data){
+    clientes = data.map(c => c.dados);
+    salvarClientes(); // opcional (backup local)
+    buscarCliente();
+  }
+}
+  
 // 🔎 BUSCA
 function buscarCliente(){
 
@@ -759,6 +778,24 @@ function deletarMaterial(id){
   if(confirm("Excluir material?")){
     materiais = materiais.filter(x=>x.id!=id);
     salvar();
+    renderMateriais();
+  }
+}
+
+async function carregarMateriaisNuvem(){
+
+  const { data, error } = await db
+    .from('materiais')
+    .select('*');
+
+  if(error){
+    console.log("Erro materiais:", error);
+    return;
+  }
+
+  if(data){
+    materiais = data.map(m => m.dados);
+    salvar(); // opcional
     renderMateriais();
   }
 }
@@ -1227,6 +1264,44 @@ function renderPreviewOS(){
   `;
 }
 
+async function migrarParaNuvem(){
+
+  if(!confirm("Deseja enviar TODOS os dados para a nuvem?")) return;
+
+  try{
+
+    // 🔥 PROPOSTAS
+    for(let p of propostas){
+
+      await db.from('propostas').insert([{
+        proposta_id: p.id.toString(),
+        dados: p
+      }]);
+    }
+
+    // 🔥 CLIENTES
+    for(let c of clientes){
+
+      await db.from('clientes').insert([{
+        dados: c
+      }]);
+    }
+
+    // 🔥 MATERIAIS
+    for(let m of materiais){
+
+      await db.from('materiais').insert([{
+        dados: m
+      }]);
+    }
+
+    alert("Dados enviados para nuvem com sucesso!");
+
+  } catch(err){
+    console.log(err);
+    alert("Erro ao migrar dados");
+  }
+}
 
 // ================= PDF =================
 
@@ -1669,6 +1744,8 @@ window.onload=()=>{
 
   // 🔥 FORA DO IF
   carregarNuvem();
+  carregarClientesNuvem();
+  carregarMateriaisNuvem();
 };
 
 renderMateriais();
