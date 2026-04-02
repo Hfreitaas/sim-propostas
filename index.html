@@ -744,8 +744,8 @@ function setTipo(tipo){
 // ================= MATERIAIS =================
 
 function salvarMaterial(){
-  let m = {
-    id: editId || Date.now(),
+    let m = {
+    id: editId || Date.now(), // 🔥 IMPORTANTE
     desc: desc.value,
     un: un.value,
     custo: parseValor(custo.value),
@@ -1305,14 +1305,41 @@ async function migrarParaNuvem(){
 
 async function salvarMaterialNuvem(m){
 
-  const { error } = await db
-    .from('materiais')
-    .insert([{ dados: m }]);
+  let id = m.id.toString();
 
-  if(error){
-    console.log("Erro material:", error);
+  // 🔎 verifica se já existe
+  const { data: existente } = await db
+    .from('materiais')
+    .select('*')
+    .eq('dados->>id', id)
+    .maybeSingle();
+
+  if(existente){
+
+    // 🔄 atualiza
+    const { error } = await db
+      .from('materiais')
+      .update({ dados: m })
+      .eq('dados->>id', id);
+
+    if(error){
+      console.log("Erro atualizar material:", error);
+    } else {
+      console.log("Material atualizado!");
+    }
+
   } else {
-    console.log("Material salvo na nuvem");
+
+    // ➕ novo
+    const { error } = await db
+      .from('materiais')
+      .insert([{ dados: m }]);
+
+    if(error){
+      console.log("Erro salvar material:", error);
+    } else {
+      console.log("Material salvo!");
+    }
   }
 }  
 
