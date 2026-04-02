@@ -662,11 +662,11 @@ async function carregarClientesNuvem(){
     return;
   }
 
-  if(data){
-    clientes = data.map(c => c.dados);
-    salvarClientes(); // opcional (backup local)
-    buscarCliente();
-  }
+  if(data && data.length > 0){
+  clientes = data.map(c => c.dados);
+  salvarClientes();
+  buscarCliente();
+}
 }
   
 // 🔎 BUSCA
@@ -759,7 +759,7 @@ function salvarMaterial(){
   }else{
     materiais.push(m);
   }
-
+  salvarMaterialNuvem(m);
   salvar();
   desc.value="";un.value="";custo.value="";mult.value="";
   renderMateriais();
@@ -793,11 +793,11 @@ async function carregarMateriaisNuvem(){
     return;
   }
 
-  if(data){
-    materiais = data.map(m => m.dados);
-    salvar(); // opcional
-    renderMateriais();
-  }
+  if(data && data.length > 0){
+  materiais = data.map(m => m.dados);
+  salvar();
+  renderMateriais();
+}
 }
 
 function renderMateriais(){
@@ -1303,6 +1303,20 @@ async function migrarParaNuvem(){
   }
 }
 
+async function salvarMaterialNuvem(m){
+
+  const { error } = await db
+    .from('materiais')
+    .insert([{ dados: m }]);
+
+  if(error){
+    console.log("Erro material:", error);
+  } else {
+    console.log("Material salvo na nuvem");
+  }
+}  
+
+  
 // ================= PDF =================
 
 function gerarPDF_OS(){
